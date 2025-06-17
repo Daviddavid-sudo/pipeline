@@ -3,18 +3,18 @@ import nltk
 import string
 import re
 import inflect
+import csv
 from nltk.corpus import stopwords
 from nltk.tokenize import word_tokenize
 from nltk.stem import WordNetLemmatizer
 from nltk.stem.porter import PorterStemmer
 from nltk.tokenize import word_tokenize
 
-# Download latest version
-path = kagglehub.dataset_download("lakshmi25npathi/imdb-dataset-of-50k-movie-reviews")
 
 p = inflect.engine()
 nltk.download('punkt_tab')
 nltk.download('wordnet')
+nltk.download('stopwords')
 lemmatizer = WordNetLemmatizer()
 stemmer = PorterStemmer()
 
@@ -69,4 +69,39 @@ def lemma_words(text):
     word_tokens = word_tokenize(text)
     lemmas = [lemmatizer.lemmatize(word) for word in word_tokens]
     return lemmas
-  
+
+
+def read_csv(file):
+    with open('IMDBDataset.csv') as f:
+        review = csv.reader(f)
+        data = [row for row in review]
+    return data
+
+
+def write_csv(readfile,stem):
+    with open('Cleaned_lemma.csv', 'w', newline='') as csvfile:
+        writer = csv.writer(csvfile)
+        writer.writerows(pipeline(readfile,stem))
+
+
+def pipeline(readfile,stem):
+    data = read_csv(readfile)
+    cleaned_data = []
+    for review in data[1:]:
+        review[0] = text_lowercase(review[0])
+        review[0] = remove_numbers(review[0])
+        review[0] = convert_number(review[0])
+        review[0] = remove_punctuation(review[0])
+        review[0] = remove_whitespace(review[0])
+        review[0] = remove_stopwords(review[0])
+        if stem:
+            for i in range(len(review[0])):
+                review[0][i] = stem_words(review[0][i])[0]
+            cleaned_data.append([review[0],review[1]])
+        else:
+            for i in range(len(review[0])):
+                review[0][i] = lemma_words(review[0][i])[0]
+            cleaned_data.append([review[0],review[1]])
+    return cleaned_data
+
+write_csv('IMDBDataset.csv', False)
